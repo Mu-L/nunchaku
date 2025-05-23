@@ -2,11 +2,12 @@ import os
 import re
 import subprocess
 import sys
+from datetime import date
 
 import setuptools
 import torch
 from packaging import version as packaging_version
-from torch.utils.cpp_extension import BuildExtension, CUDA_HOME, CUDAExtension
+from torch.utils.cpp_extension import CUDA_HOME, BuildExtension, CUDAExtension
 
 
 class CustomBuildExtension(BuildExtension):
@@ -64,6 +65,8 @@ if __name__ == "__main__":
 
     torch_version = torch.__version__.split("+")[0]
     torch_major_minor_version = ".".join(torch_version.split(".")[:2])
+    if "dev" in version:
+        version = version + date.today().strftime("%Y%m%d")  # data
     version = version + "+torch" + torch_major_minor_version
 
     ROOT_DIR = os.path.dirname(__file__)
