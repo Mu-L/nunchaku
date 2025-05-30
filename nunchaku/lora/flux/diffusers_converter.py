@@ -4,6 +4,7 @@ import warnings
 
 import torch
 from diffusers.loaders import FluxLoraLoaderMixin
+from diffusers.utils.state_dict_utils import convert_unet_state_dict_to_peft
 from safetensors.torch import save_file
 
 from .utils import load_state_dict_in_safetensors
@@ -14,7 +15,14 @@ def to_diffusers(input_lora: str | dict[str, torch.Tensor], output_path: str | N
         tensors = load_state_dict_in_safetensors(input_lora, device="cpu")
     else:
         tensors = {k: v for k, v in input_lora.items()}
+
+    ### convert the FP8 tensors to BF16
+    for k, v in tensors.items():
+        if v.dtype not in [torch.float64, torch.float32, torch.bfloat16, torch.float16]:
+            tensors[k] = v.to(torch.bfloat16)
+
     new_tensors, alphas = FluxLoraLoaderMixin.lora_state_dict(tensors, return_alphas=True)
+    new_tensors = convert_unet_state_dict_to_peft(new_tensors)
 
     if alphas is not None and len(alphas) > 0:
         warnings.warn("Alpha values are not used in the conversion to diffusers format.")

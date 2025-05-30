@@ -7,10 +7,10 @@ import torch
 from safetensors.torch import save_file
 from tqdm import tqdm
 
+from ...utils import filter_state_dict, load_state_dict_in_safetensors
 from .diffusers_converter import to_diffusers
 from .packer import NunchakuWeightPacker
 from .utils import is_nunchaku_format, pad
-from ...utils import filter_state_dict, load_state_dict_in_safetensors
 
 logger = logging.getLogger(__name__)
 
@@ -116,6 +116,9 @@ def convert_to_nunchaku_transformer_block_lowrank_dict(  # noqa: C901
         )
         if orig_lora[0] is None or orig_lora[1] is None:
             assert orig_lora[0] is None and orig_lora[1] is None
+            orig_lora = None
+        elif orig_lora[0].numel() == 0 or orig_lora[1].numel() == 0:
+            assert orig_lora[0].numel() == 0 and orig_lora[1].numel() == 0
             orig_lora = None
         else:
             assert orig_lora[0] is not None and orig_lora[1] is not None
